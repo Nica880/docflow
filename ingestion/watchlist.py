@@ -1,0 +1,73 @@
+"""Watch-list of companies: large-cap US tech + financials (public tickers, no private data)."""
+
+from __future__ import annotations
+
+TECH = [
+    "AAPL",
+    "MSFT",
+    "NVDA",
+    "GOOGL",
+    "AMZN",
+    "META",
+    "AVGO",
+    "ORCL",
+    "CRM",
+    "ADBE",
+    "AMD",
+    "CSCO",
+    "INTC",
+    "QCOM",
+    "TXN",
+    "IBM",
+    "NOW",
+    "INTU",
+    "AMAT",
+    "MU",
+    "ADI",
+    "LRCX",
+    "KLAC",
+    "PANW",
+    "SNPS",
+    "CDNS",
+    "ANET",
+    "FTNT",
+    "NFLX",
+    "HPQ",
+]
+FINANCIALS = [
+    "JPM",
+    "BAC",
+    "WFC",
+    "C",
+    "GS",
+    "MS",
+    "BLK",
+    "SCHW",
+    "AXP",
+    "SPGI",
+    "CB",
+    "PGR",
+    "MMC",
+    "ICE",
+    "CME",
+    "PNC",
+    "USB",
+    "TFC",
+    "COF",
+    "MET",
+    "AIG",
+    "BK",
+    "TRV",
+    "ALL",
+    "PRU",
+    "AFL",
+    "MCO",
+    "MSCI",
+    "STT",
+    "FITB",
+]
+
+# Small, fast subset used by `make demo` / CI.
+DEMO = ["AAPL", "MSFT", "NVDA", "JPM", "GS"]
+
+WATCHLIST = TECH + FINANCIALS
