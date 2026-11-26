@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "cik": 320193,
+      "name": "Apple Inc.",
+      "ticker": "AAPL",
+      "sic_code": "3571",
+      "sector": "Information Technology",
+      "filings": 2
+    },
+    {
+      "cik": 789019,
+      "name": "MICROSOFT CORP",
+      "ticker": "MSFT",
+      "sic_code": "7372",
+      "sector": "Information Technology",
+      "filings": 1
+    },
+    {
+      "cik": 19617,
+      "name": "JPMORGAN CHASE & CO",
+      "ticker": "JPM",
+      "sic_code": "6021",
+      "sector": "Financials",
+      "filings": 1
+    }
+  ],
+  "total": 3
+}

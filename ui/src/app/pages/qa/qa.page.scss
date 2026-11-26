@@ -1,0 +1,167 @@
+.chat {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 150px);
+  min-height: 420px;
+  padding: 0;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.msg {
+  max-width: 78%;
+  padding: 10px 14px;
+  border-radius: 12px;
+  white-space: pre-wrap;
+}
+
+.msg-user {
+  align-self: flex-end;
+  background: var(--primary);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.msg-bot {
+  align-self: flex-start;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.msg-bot.refused {
+  background: #fff8eb;
+  border-color: #f6d595;
+  color: #7a4a05;
+}
+
+.refused-label {
+  font-weight: 600;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.msg-error {
+  align-self: flex-start;
+  background: #fff6f5;
+  border: 1px solid #f5c2c0;
+  color: #b42318;
+}
+
+.citations {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  white-space: normal;
+
+  .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+}
+
+.citation {
+  display: block;
+  font-size: 12.5px;
+  text-decoration: none;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+
+  &:hover {
+    border-color: var(--primary);
+  }
+}
+
+.cite-num {
+  font-weight: 600;
+}
+
+.cite-snippet {
+  display: block;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tools {
+  margin-top: 10px;
+  white-space: normal;
+  font-size: 12.5px;
+
+  summary {
+    cursor: pointer;
+    color: var(--muted);
+  }
+}
+
+.tool {
+  margin-top: 8px;
+}
+
+.tool-name {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.tool-out {
+  margin-top: 4px;
+  color: var(--muted);
+  white-space: pre-wrap;
+  max-height: 120px;
+  overflow: auto;
+}
+
+.empty {
+  margin: auto;
+  text-align: center;
+  color: var(--muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  max-width: 720px;
+}
+
+.chip {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--text);
+
+  &:hover {
+    border-color: var(--primary);
+    color: var(--primary-600);
+  }
+}
+
+.composer {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  border-top: 1px solid var(--border);
+
+  textarea {
+    flex: 1;
+    resize: none;
+  }
+}

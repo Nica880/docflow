@@ -1,0 +1,94 @@
+{
+  "company": {
+    "cik": 320193,
+    "name": "Apple Inc.",
+    "ticker": "AAPL",
+    "sic_code": "3571",
+    "sector": "Information Technology",
+    "filings": 2
+  },
+  "financials": [
+    {
+      "fiscal_year": 2022,
+      "revenue": 394328000000,
+      "net_income": 99803000000,
+      "operating_cash_flow": 122151000000,
+      "source": "xbrl"
+    },
+    {
+      "fiscal_year": 2023,
+      "revenue": 383285000000,
+      "net_income": 96995000000,
+      "operating_cash_flow": 110543000000,
+      "source": "xbrl"
+    },
+    {
+      "fiscal_year": 2024,
+      "revenue": 391035000000,
+      "net_income": 93736000000,
+      "operating_cash_flow": 118254000000,
+      "source": "llm"
+    }
+  ],
+  "risks": [
+    {
+      "year": 2023,
+      "category": "cybersecurity",
+      "mentions": 6
+    },
+    {
+      "year": 2023,
+      "category": "supply_chain",
+      "mentions": 9
+    },
+    {
+      "year": 2023,
+      "category": "regulatory",
+      "mentions": 7
+    },
+    {
+      "year": 2024,
+      "category": "cybersecurity",
+      "mentions": 8
+    },
+    {
+      "year": 2024,
+      "category": "supply_chain",
+      "mentions": 10
+    },
+    {
+      "year": 2024,
+      "category": "regulatory",
+      "mentions": 9
+    },
+    {
+      "year": 2024,
+      "category": "ai",
+      "mentions": 3
+    }
+  ],
+  "filings": [
+    {
+      "accession_no": "0000320193-24-000123",
+      "cik": 320193,
+      "company_name": "Apple Inc.",
+      "form_type": "10-K",
+      "filed_at": "2024-11-01",
+      "period_end": "2024-09-28",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/0000320193-24-000123-index.htm",
+      "status": "loaded",
+      "size_bytes": 1534221
+    },
+    {
+      "accession_no": "0000320193-23-000106",
+      "cik": 320193,
+      "company_name": "Apple Inc.",
+      "form_type": "10-K",
+      "filed_at": "2023-11-03",
+      "period_end": "2023-09-30",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019323000106/0000320193-23-000106-index.htm",
+      "status": "loaded",
+      "size_bytes": 1490112
+    }
+  ]
+}

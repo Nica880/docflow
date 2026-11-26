@@ -1,0 +1,89 @@
+{
+  "filing": {
+    "accession_no": "0000320193-24-000123",
+    "cik": 320193,
+    "company_name": "Apple Inc.",
+    "form_type": "10-K",
+    "filed_at": "2024-11-01",
+    "period_end": "2024-09-28",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019324000123/0000320193-24-000123-index.htm",
+    "status": "loaded",
+    "size_bytes": 1534221
+  },
+  "sections": [
+    {
+      "id": 101,
+      "item": "1",
+      "title": "Business",
+      "char_count": 555
+    },
+    {
+      "id": 102,
+      "item": "1A",
+      "title": "Risk Factors",
+      "char_count": 1205
+    },
+    {
+      "id": 103,
+      "item": "7",
+      "title": "Management’s Discussion and Analysis of Financial Condition and Results of Operations",
+      "char_count": 436
+    }
+  ],
+  "extractions": [
+    {
+      "id": 501,
+      "schema_name": "financials",
+      "schema_version": "1",
+      "model": "gpt-4o-mini",
+      "prompt_version": "v2",
+      "payload": {
+        "fiscal_year": 2024,
+        "revenue": 391035000000,
+        "net_income": 93736000000,
+        "operating_cash_flow": 118254000000,
+        "currency": "USD"
+      },
+      "confidence": {
+        "fiscal_year": 0.99,
+        "revenue": 0.97,
+        "net_income": 0.95,
+        "operating_cash_flow": 0.71,
+        "currency": 0.99
+      },
+      "latency_ms": 2140,
+      "created_at": "2024-11-02T09:14:11Z"
+    },
+    {
+      "id": 502,
+      "schema_name": "risk_factors",
+      "schema_version": "1",
+      "model": "gpt-4o-mini",
+      "prompt_version": "v2",
+      "payload": {
+        "risks": [
+          {
+            "category": "supply_chain",
+            "title": "Dependence on outsourcing partners",
+            "severity": "high"
+          },
+          {
+            "category": "cybersecurity",
+            "title": "IT system failures and network disruptions",
+            "severity": "high"
+          },
+          {
+            "category": "regulatory",
+            "title": "Complex and changing laws",
+            "severity": "medium"
+          }
+        ]
+      },
+      "confidence": {
+        "risks": 0.82
+      },
+      "latency_ms": 3310,
+      "created_at": "2024-11-02T09:14:15Z"
+    }
+  ]
+}

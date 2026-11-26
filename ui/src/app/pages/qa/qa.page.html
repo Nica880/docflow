@@ -1,0 +1,110 @@
+<div class="page-head">
+  <div>
+    <h1>Ask DocFlow</h1>
+    <p class="subtitle">
+      An agent that answers questions over extracted 10-K data and filing text — with citations.
+    </p>
+  </div>
+  @if (messages().length) {
+    <button class="btn" type="button" (click)="clear()" data-testid="clear-chat">Clear</button>
+  }
+</div>
+
+<section class="chat card">
+  <div class="messages" #list data-testid="messages" aria-live="polite">
+    @for (m of messages(); track m.id) {
+      @if (m.role === 'user') {
+        <div class="msg msg-user" data-testid="user-message">{{ m.text }}</div>
+      } @else if (m.role === 'assistant') {
+        <div
+          class="msg msg-bot"
+          [class.refused]="m.answer.refused"
+          data-testid="answer"
+          [attr.data-refused]="m.answer.refused"
+        >
+          @if (m.answer.refused) {
+            <div class="refused-label" data-testid="refused">⚠ Declined to answer</div>
+          }
+          <div class="answer-text">{{ m.answer.answer }}</div>
+
+          @if (m.answer.citations.length) {
+            <div class="citations" data-testid="citations">
+              <div class="label">Sources</div>
+              @for (c of m.answer.citations; track $index) {
+                <a
+                  class="citation"
+                  data-testid="citation"
+                  [routerLink]="['/filings', c.accession_no]"
+                  [queryParams]="c.item ? { item: c.item } : {}"
+                  [title]="c.snippet"
+                >
+                  <span class="cite-num">[{{ $index + 1 }}]</span>
+                  {{ c.company ?? c.accession_no }}
+                  @if (c.item) {
+                    · Item {{ c.item }}
+                  }
+                  <span class="cite-snippet">{{ c.snippet }}</span>
+                </a>
+              }
+            </div>
+          }
+
+          @if (m.answer.tool_calls.length) {
+            <details class="tools" data-testid="tool-calls">
+              <summary>{{ m.answer.tool_calls.length }} tool call(s)</summary>
+              @for (t of m.answer.tool_calls; track $index) {
+                <div class="tool">
+                  <div class="mono tool-name">{{ t.tool }}</div>
+                  <pre class="json">{{ t.input | json }}</pre>
+                  <div class="tool-out mono">{{ t.output_preview }}</div>
+                </div>
+              }
+            </details>
+          }
+        </div>
+      } @else {
+        <div class="msg msg-error" role="alert" data-testid="qa-error">
+          Request failed: {{ m.text }}
+        </div>
+      }
+    } @empty {
+      <div class="empty" data-testid="qa-empty">
+        <p>Ask about revenues, risk factors or what a company says in its 10-K.</p>
+        <div class="chips">
+          @for (q of examples; track q) {
+            <button type="button" class="chip" (click)="ask(q)" data-testid="example-chip">
+              {{ q }}
+            </button>
+          }
+        </div>
+      </div>
+    }
+    @if (pending()) {
+      <div class="msg msg-bot typing" data-testid="qa-pending" role="status">
+        <span class="spinner" aria-hidden="true"></span> Thinking…
+      </div>
+    }
+  </div>
+
+  <form class="composer" (submit)="$event.preventDefault(); ask()">
+    <textarea
+      class="input"
+      rows="2"
+      placeholder="Ask a question about the filings…"
+      aria-label="Question"
+      data-testid="qa-input"
+      maxlength="1000"
+      [value]="draft()"
+      (input)="draft.set($any($event.target).value)"
+      (keydown)="onKeydown($event)"
+    ></textarea>
+    <button
+      class="btn btn-primary"
+      type="submit"
+      [disabled]="pending() || draft().trim().length < 3"
+      data-testid="qa-send"
+    >
+      Ask
+    </button>
+  </form>
+</section>

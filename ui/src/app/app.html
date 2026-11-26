@@ -1,0 +1,28 @@
+<div class="shell">
+  <aside class="sidebar" data-testid="sidebar">
+    <a class="brand" routerLink="/pipeline">
+      <span class="brand-mark" aria-hidden="true">D</span>
+      <span>
+        <span class="brand-name">DocFlow</span>
+        <span class="brand-sub">10-K intelligence</span>
+      </span>
+    </a>
+    <nav aria-label="Main">
+      @for (item of nav; track item.path) {
+        <a
+          class="nav-link"
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          [attr.data-testid]="'nav-' + item.path.slice(1)"
+        >
+          <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+    <div class="sidebar-foot">SEC EDGAR &middot; LLM extraction &middot; dbt</div>
+  </aside>
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

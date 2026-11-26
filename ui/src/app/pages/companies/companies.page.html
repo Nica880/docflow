@@ -1,0 +1,83 @@
+<div class="page-head">
+  <div>
+    <h1>Companies</h1>
+    <p class="subtitle">Filers tracked by DocFlow, with extracted financials and risk factors.</p>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input
+    class="input"
+    type="search"
+    placeholder="Search name, ticker or CIK…"
+    aria-label="Search companies"
+    data-testid="company-search"
+    [value]="q()"
+    (input)="setQuery($any($event.target).value)"
+    style="width: 280px"
+  />
+  <select
+    class="select"
+    aria-label="Sector"
+    data-testid="sector-filter"
+    [value]="sector()"
+    (change)="setSector($any($event.target).value)"
+  >
+    <option value="">All sectors</option>
+    @for (s of sectors(); track s) {
+      <option [value]="s">{{ s }}</option>
+    }
+  </select>
+  <span class="muted" style="margin-left: auto">{{ pageLabel() }}</span>
+</div>
+
+<app-state
+  [loading]="companies.isLoading() && !companies.hasValue()"
+  [error]="companies.error()"
+  [empty]="companies.hasValue() && companies.value().items.length === 0"
+  emptyText="No companies match your filters."
+/>
+
+@if (companies.hasValue() && companies.value().items.length) {
+  <section class="card" style="padding: 0">
+    <div class="table-wrap">
+      <table class="table" data-testid="companies-table">
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Ticker</th>
+            <th>CIK</th>
+            <th>Sector</th>
+            <th>SIC</th>
+            <th class="num">Filings</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of companies.value().items; track c.cik) {
+            <tr data-testid="company-row">
+              <td>
+                <a [routerLink]="['/companies', c.cik]" data-testid="company-link">{{ c.name }}</a>
+              </td>
+              <td class="mono">{{ c.ticker ?? '—' }}</td>
+              <td class="mono">{{ c.cik }}</td>
+              <td>{{ c.sector ?? '—' }}</td>
+              <td class="mono">{{ c.sic_code ?? '—' }}</td>
+              <td class="num">{{ c.filings | number }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <div class="toolbar">
+    <button class="btn" type="button" (click)="page(-1)" [disabled]="offset() === 0">← Prev</button>
+    <button
+      class="btn"
+      type="button"
+      (click)="page(1)"
+      [disabled]="offset() + pageSize >= companies.value().total"
+    >
+      Next →
+    </button>
+  </div>
+}

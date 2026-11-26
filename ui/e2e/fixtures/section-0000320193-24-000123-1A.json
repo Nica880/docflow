@@ -1,0 +1,36 @@
+{
+  "accession_no": "0000320193-24-000123",
+  "item": "1A",
+  "title": "Risk Factors",
+  "text": "The Company’s business, reputation, results of operations, financial condition and stock price can be affected by a number of factors, whether currently known or unknown.\n\nThe Company depends on component and product manufacturing and logistical services provided by outsourcing partners, many of which are located outside of the U.S. Substantially all of the Company’s manufacturing is performed in whole or in part by outsourcing partners located primarily in China mainland, India, Japan, South Korea, Taiwan and Vietnam.\n\nThe Company is exposed to the risk of write-downs on the value of its inventory and other assets, in addition to purchase commitment cancellation risk.\n\nThe Company’s business and reputation are impacted by information technology system failures and network disruptions. Losses or unauthorized access to or releases of confidential information, including personal information, could subject the Company to significant reputational, financial, legal and operational consequences.\n\nThe Company is subject to complex and changing laws and regulations worldwide, which exposes the Company to potential liabilities, increased costs and other adverse effects on the Company’s business.",
+  "highlights": [
+    {
+      "field": "risk.supply_chain",
+      "value": "supply_chain",
+      "snippet": "The Company depends on component and product manufacturing and logistical services provided by outsourcing partners, many of which are located outside of the U.S.",
+      "start": 172,
+      "end": 334
+    },
+    {
+      "field": "risk.inventory",
+      "value": "operational",
+      "snippet": "The Company is exposed to the risk of write-downs on the value of its inventory and other assets, in addition to purchase commitment cancellation risk.",
+      "start": 526,
+      "end": 677
+    },
+    {
+      "field": "risk.cybersecurity",
+      "value": "cybersecurity",
+      "snippet": "The Company’s business and reputation are impacted by information technology system failures and network disruptions.",
+      "start": 679,
+      "end": 796
+    },
+    {
+      "field": "risk.regulatory",
+      "value": "regulatory",
+      "snippet": "The Company is subject to complex and changing laws and regulations worldwide",
+      "start": 1006,
+      "end": 1083
+    }
+  ]
+}

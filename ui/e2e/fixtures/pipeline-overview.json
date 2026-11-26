@@ -1,0 +1,135 @@
+{
+  "totals": {
+    "companies": 3,
+    "filings": 4,
+    "sections": 61,
+    "chunks": 2380,
+    "extractions": 9,
+    "open_reviews": 3,
+    "quarantined": 1
+  },
+  "filings_by_status": {
+    "loaded": 2,
+    "extracted": 1,
+    "quarantined": 1
+  },
+  "queue": {
+    "pending": 4,
+    "in_progress": 1,
+    "done": 112,
+    "failed": 2
+  },
+  "runs": [
+    {
+      "run_id": "manual__2026-11-25T06:00:00",
+      "dag_id": "docflow_pipeline",
+      "started_at": "2026-11-25T06:00:02Z",
+      "finished_at": "2026-11-25T06:14:40Z",
+      "docs_in": 28,
+      "docs_ok": 27,
+      "docs_quarantined": 1,
+      "status": "success",
+      "duration_s": 878.4
+    },
+    {
+      "run_id": "scheduled__2026-11-24T06:00:00",
+      "dag_id": "docflow_pipeline",
+      "started_at": "2026-11-24T06:00:01Z",
+      "finished_at": "2026-11-24T06:11:05Z",
+      "docs_in": 35,
+      "docs_ok": 35,
+      "docs_quarantined": 0,
+      "status": "success",
+      "duration_s": 664
+    },
+    {
+      "run_id": "scheduled__2026-11-23T06:00:00",
+      "dag_id": "docflow_pipeline",
+      "started_at": "2026-11-23T06:00:01Z",
+      "finished_at": "2026-11-23T06:02:13Z",
+      "docs_in": 19,
+      "docs_ok": 0,
+      "docs_quarantined": 0,
+      "status": "failed",
+      "duration_s": 132.2
+    },
+    {
+      "run_id": "manual__2026-11-26T15:58:00",
+      "dag_id": "docflow_pipeline",
+      "started_at": "2026-11-26T15:58:00Z",
+      "finished_at": null,
+      "docs_in": 12,
+      "docs_ok": 7,
+      "docs_quarantined": 0,
+      "status": "running",
+      "duration_s": null
+    }
+  ],
+  "quarantine": [
+    {
+      "id": 7,
+      "accession_no": "0000019617-24-000225",
+      "stage": "extract",
+      "error": "ValidationError: 1 validation error for Financials\nrevenue\n  Field required [type=missing]",
+      "created_at": "2026-11-25T06:09:12Z"
+    }
+  ],
+  "throughput": [
+    {
+      "day": "2026-11-12",
+      "filings": 12
+    },
+    {
+      "day": "2026-11-13",
+      "filings": 18
+    },
+    {
+      "day": "2026-11-14",
+      "filings": 9
+    },
+    {
+      "day": "2026-11-15",
+      "filings": 22
+    },
+    {
+      "day": "2026-11-16",
+      "filings": 30
+    },
+    {
+      "day": "2026-11-17",
+      "filings": 14
+    },
+    {
+      "day": "2026-11-18",
+      "filings": 0
+    },
+    {
+      "day": "2026-11-19",
+      "filings": 0
+    },
+    {
+      "day": "2026-11-20",
+      "filings": 25
+    },
+    {
+      "day": "2026-11-21",
+      "filings": 31
+    },
+    {
+      "day": "2026-11-22",
+      "filings": 27
+    },
+    {
+      "day": "2026-11-23",
+      "filings": 19
+    },
+    {
+      "day": "2026-11-24",
+      "filings": 35
+    },
+    {
+      "day": "2026-11-25",
+      "filings": 28
+    }
+  ]
+}

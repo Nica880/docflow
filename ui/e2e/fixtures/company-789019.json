@@ -1,0 +1,51 @@
+{
+  "company": {
+    "cik": 789019,
+    "name": "MICROSOFT CORP",
+    "ticker": "MSFT",
+    "sic_code": "7372",
+    "sector": "Information Technology",
+    "filings": 1
+  },
+  "financials": [
+    {
+      "fiscal_year": 2023,
+      "revenue": 211915000000,
+      "net_income": 72361000000,
+      "operating_cash_flow": 87582000000,
+      "source": "xbrl"
+    },
+    {
+      "fiscal_year": 2024,
+      "revenue": 245122000000,
+      "net_income": 88136000000,
+      "operating_cash_flow": 118548000000,
+      "source": "xbrl"
+    }
+  ],
+  "risks": [
+    {
+      "year": 2024,
+      "category": "cybersecurity",
+      "mentions": 11
+    },
+    {
+      "year": 2024,
+      "category": "competition",
+      "mentions": 6
+    }
+  ],
+  "filings": [
+    {
+      "accession_no": "0000950170-24-087843",
+      "cik": 789019,
+      "company_name": "MICROSOFT CORP",
+      "form_type": "10-K",
+      "filed_at": "2024-07-30",
+      "period_end": "2024-06-30",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/789019/000095017024087843/0000950170-24-087843-index.htm",
+      "status": "extracted",
+      "size_bytes": 2210345
+    }
+  ]
+}

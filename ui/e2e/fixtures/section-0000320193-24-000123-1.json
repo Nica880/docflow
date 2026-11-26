@@ -1,0 +1,15 @@
+{
+  "accession_no": "0000320193-24-000123",
+  "item": "1",
+  "title": "Business",
+  "text": "Company Background\n\nThe Company designs, manufactures and markets smartphones, personal computers, tablets, wearables and accessories, and sells a variety of related services. The Company’s fiscal year is the 52- or 53-week period that ends on the last Saturday of September.\n\nAs of September 28, 2024, the Company had approximately 164,000 full-time equivalent employees.\n\nThe Company’s products include iPhone, Mac, iPad, and Wearables, Home and Accessories. Services include advertising, AppleCare, cloud services, digital content and payment services.",
+  "highlights": [
+    {
+      "field": "employees",
+      "value": "164000",
+      "snippet": "164,000 full-time equivalent employees",
+      "start": 333,
+      "end": 371
+    }
+  ]
+}

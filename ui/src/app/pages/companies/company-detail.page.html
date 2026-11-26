@@ -1,0 +1,130 @@
+<p class="muted" style="margin: 0 0 8px"><a routerLink="/companies">← Companies</a></p>
+
+<app-state
+  [loading]="detail.isLoading() && !detail.hasValue()"
+  [error]="detail.error()"
+  loadingText="Loading company…"
+/>
+
+@if (detail.hasValue()) {
+  @let d = detail.value();
+  <div class="page-head">
+    <div>
+      <h1 data-testid="company-name">{{ d.company.name }}</h1>
+      <p class="subtitle">
+        @if (d.company.ticker) {
+          <span class="mono">{{ d.company.ticker }}</span> ·
+        }
+        CIK <span class="mono">{{ d.company.cik }}</span>
+        @if (d.company.sector) {
+          · {{ d.company.sector }}
+        }
+        @if (d.company.sic_code) {
+          · SIC {{ d.company.sic_code }}
+        }
+      </p>
+    </div>
+  </div>
+
+  <div class="grid grid-2">
+    <section class="card" data-testid="financials">
+      <h2>Financials</h2>
+      @if (financials().length) {
+        <app-chart
+          type="bar"
+          [labels]="finLabels()"
+          [datasets]="finDatasets()"
+          valueFormat="compact"
+          ariaLabel="Financials chart"
+          data-testid="financials-chart"
+        />
+        <div class="table-wrap" style="margin-top: 12px">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Fiscal year</th>
+                <th class="num">Revenue</th>
+                <th class="num">Net income</th>
+                <th class="num">Op. cash flow</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (f of financials(); track f.fiscal_year) {
+                <tr>
+                  <td>FY{{ f.fiscal_year }}</td>
+                  <td class="num">{{ compact(f.revenue) }}</td>
+                  <td class="num">{{ compact(f.net_income) }}</td>
+                  <td class="num">{{ compact(f.operating_cash_flow) }}</td>
+                  <td><app-badge [value]="f.source" /></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="muted" style="font-size: 12px; margin: 8px 0 0">
+          Source: {{ sources().join(', ') }} (XBRL-reported values preferred over LLM-extracted).
+        </p>
+      } @else {
+        <app-state [empty]="true" emptyText="No financials extracted yet." />
+      }
+    </section>
+
+    <section class="card" data-testid="risks">
+      <h2>Risk factor trends</h2>
+      @if (risks().years.length) {
+        <app-chart
+          type="bar"
+          [stacked]="true"
+          [labels]="risks().years"
+          [datasets]="riskDatasets()"
+          ariaLabel="Risk trends chart"
+          data-testid="risks-chart"
+        />
+        <p class="muted" style="font-size: 12px; margin: 8px 0 0">
+          Mentions per risk category in Item 1A, by filing year.
+        </p>
+      } @else {
+        <app-state [empty]="true" emptyText="No risk factors extracted yet." />
+      }
+    </section>
+  </div>
+
+  <section class="card" data-testid="company-filings">
+    <h2>Filings</h2>
+    @if (d.filings.length) {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Accession</th>
+              <th>Form</th>
+              <th>Filed</th>
+              <th>Period end</th>
+              <th>Status</th>
+              <th>EDGAR</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (f of d.filings; track f.accession_no) {
+              <tr data-testid="filing-row">
+                <td class="mono">
+                  <a [routerLink]="['/filings', f.accession_no]" data-testid="filing-link">{{
+                    f.accession_no
+                  }}</a>
+                </td>
+                <td>{{ f.form_type }}</td>
+                <td>{{ f.filed_at | date: 'mediumDate' }}</td>
+                <td>{{ f.period_end ? (f.period_end | date: 'mediumDate') : '—' }}</td>
+                <td><app-badge [value]="f.status" /></td>
+                <td><a [href]="f.source_url" target="_blank" rel="noopener">source ↗</a></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <app-state [empty]="true" emptyText="No filings ingested for this company." />
+    }
+  </section>
+}

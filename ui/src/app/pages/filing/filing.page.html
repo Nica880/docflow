@@ -1,0 +1,121 @@
+<app-state
+  [loading]="detail.isLoading() && !detail.hasValue()"
+  [error]="detail.error()"
+  loadingText="Loading filing…"
+/>
+
+@if (detail.hasValue()) {
+  @let d = detail.value();
+  <p class="muted" style="margin: 0 0 8px">
+    <a [routerLink]="['/companies', d.filing.cik]">← {{ d.filing.company_name ?? 'Company' }}</a>
+  </p>
+  <div class="page-head">
+    <div>
+      <h1 data-testid="filing-title">
+        {{ d.filing.company_name ?? 'CIK ' + d.filing.cik }} · {{ d.filing.form_type }}
+      </h1>
+      <p class="subtitle meta" data-testid="filing-meta">
+        <span class="mono">{{ d.filing.accession_no }}</span>
+        <span>Filed {{ d.filing.filed_at | date: 'mediumDate' }}</span>
+        @if (d.filing.period_end) {
+          <span>Period end {{ d.filing.period_end | date: 'mediumDate' }}</span>
+        }
+        @if (d.filing.size_bytes) {
+          <span>{{ d.filing.size_bytes / 1024 | number: '1.0-0' }} KB</span>
+        }
+        <app-badge [value]="d.filing.status" />
+        <a [href]="d.filing.source_url" target="_blank" rel="noopener">EDGAR ↗</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="viewer">
+    <section class="card text-card">
+      @if (d.sections.length) {
+        <div class="tabs" role="tablist" data-testid="section-tabs">
+          @for (s of d.sections; track s.id) {
+            <button
+              type="button"
+              role="tab"
+              class="tab"
+              [class.active]="s.item === selected()"
+              [attr.aria-selected]="s.item === selected()"
+              [title]="s.title ?? 'Item ' + s.item"
+              (click)="selected.set(s.item)"
+              data-testid="section-tab"
+            >
+              Item {{ s.item }}
+            </button>
+          }
+        </div>
+
+        <app-state
+          [loading]="section.isLoading()"
+          [error]="section.error()"
+          loadingText="Loading section…"
+        />
+        @if (section.hasValue() && !section.isLoading()) {
+          @let s = section.value();
+          <h2 class="section-title">Item {{ s.item }}{{ s.title ? ' — ' + s.title : '' }}</h2>
+          @if (s.highlights.length) {
+            <p class="muted hl-note">
+              {{ s.highlights.length }} extracted value(s) highlighted — hover for details.
+            </p>
+          }
+          <div class="section-text" data-testid="section-text">
+            @for (seg of segments(); track $index) {
+              @if (seg.highlight; as h) {
+                <mark [title]="h.field + ': ' + h.value" data-testid="highlight">{{
+                  seg.text
+                }}</mark>
+              } @else {
+                <span>{{ seg.text }}</span>
+              }
+            }
+          </div>
+        }
+      } @else {
+        <app-state [empty]="true" emptyText="This filing has not been parsed into sections yet." />
+      }
+    </section>
+
+    <aside class="card extractions" data-testid="extractions">
+      <h2>Extractions</h2>
+      @for (e of d.extractions; track e.id) {
+        <details class="extraction" open data-testid="extraction">
+          <summary>
+            <strong>{{ e.schema_name }}</strong>
+            <span class="muted">v{{ e.schema_version }}</span>
+          </summary>
+          <p class="muted ex-meta">
+            {{ e.model }} · prompt {{ e.prompt_version }} · {{ e.latency_ms }} ms ·
+            {{ e.created_at | date: 'short' }}
+          </p>
+          @if (confidenceRows(e).length) {
+            <table class="table conf-table">
+              <tbody>
+                @for (c of confidenceRows(e); track c.field) {
+                  <tr>
+                    <td class="mono">{{ c.field }}</td>
+                    <td class="num" style="white-space: nowrap">
+                      <span class="conf-bar"
+                        ><span
+                          [style.width.%]="c.value * 100"
+                          [style.background]="confColor(c.value)"
+                        ></span
+                      ></span>
+                      {{ c.value | number: '1.2-2' }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+          <pre class="json">{{ e.payload | json }}</pre>
+        </details>
+      } @empty {
+        <app-state [empty]="true" emptyText="No extractions for this filing yet." />
+      }
+    </aside>
+  </div>
+}

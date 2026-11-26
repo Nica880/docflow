@@ -1,0 +1,100 @@
+<div class="page-head">
+  <div>
+    <h1>Evaluation</h1>
+    <p class="subtitle">
+      Extraction quality per model / prompt version against the labelled gold set.
+    </p>
+  </div>
+  @if (summary.hasValue()) {
+    <div class="stat" data-testid="confidence-threshold">
+      <div class="stat-label">Confidence threshold</div>
+      <div class="stat-value">{{ summary.value().confidence_threshold | number: '1.2-2' }}</div>
+    </div>
+  }
+</div>
+
+<app-state
+  [loading]="summary.isLoading() && !summary.hasValue()"
+  [error]="summary.error()"
+  [empty]="summary.hasValue() && runs().length === 0"
+  emptyText="No evaluation runs yet. Run the eval harness to populate this page."
+  loadingText="Loading evaluation runs…"
+/>
+
+@if (runs().length) {
+  <section class="card" data-testid="eval-runs">
+    <h2>Runs</h2>
+    <div class="table-wrap">
+      <table class="table" data-testid="eval-table">
+        <thead>
+          <tr>
+            <th>Run</th>
+            <th>Model</th>
+            <th>Prompt</th>
+            <th class="num">Docs</th>
+            @for (k of tables().scalars; track k) {
+              <th class="num">{{ label(k) }}</th>
+            }
+            <th>When</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (r of runs(); track r.id) {
+            <tr data-testid="eval-row">
+              <td class="mono">#{{ r.id }}</td>
+              <td class="mono">{{ r.model }}</td>
+              <td class="mono">{{ r.prompt_version }}</td>
+              <td class="num">{{ r.n_docs }}</td>
+              @for (k of tables().scalars; track k) {
+                <td class="num">{{ scalar(r, k) }}</td>
+              }
+              <td>{{ r.created_at | date: 'short' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  @if (accuracyFields().length) {
+    <section class="card" data-testid="accuracy-chart">
+      <h2>Field accuracy by model</h2>
+      <app-chart
+        type="bar"
+        [labels]="accuracyFields()"
+        [datasets]="accuracyDatasets()"
+        valueFormat="percent"
+        [height]="300"
+        ariaLabel="Field accuracy chart"
+      />
+    </section>
+  }
+
+  @for (n of tables().nested; track n.name) {
+    <section class="card" [attr.data-testid]="'nested-' + n.name">
+      <h2>{{ label(n.name) }}</h2>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Key</th>
+              @for (r of runs(); track r.id) {
+                <th class="num">{{ r.model }} · {{ r.prompt_version }}</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (k of n.keys; track k) {
+              <tr>
+                <td class="mono">{{ k }}</td>
+                @for (r of runs(); track r.id) {
+                  <td class="num">{{ nestedValue(r, n.name, k) }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+}

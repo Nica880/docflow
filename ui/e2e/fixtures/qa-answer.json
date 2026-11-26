@@ -1,0 +1,35 @@
+{
+  "answer": "Apple describes its supply chain as a key risk: it depends on outsourcing partners, many located outside the U.S. (primarily China mainland, India, Japan, South Korea, Taiwan and Vietnam), for manufacturing and logistics. Disruptions at these partners could materially affect its business [1].",
+  "citations": [
+    {
+      "accession_no": "0000320193-24-000123",
+      "item": "1A",
+      "company": "Apple Inc.",
+      "snippet": "The Company depends on component and product manufacturing and logistical services provided by outsourcing partners, many of which are located outside of the U.S."
+    },
+    {
+      "accession_no": "0000320193-23-000106",
+      "item": "1A",
+      "company": "Apple Inc.",
+      "snippet": "Substantially all of the Company’s manufacturing is performed in whole or in part by outsourcing partners."
+    }
+  ],
+  "tool_calls": [
+    {
+      "tool": "search_filings",
+      "input": {
+        "query": "Apple supply chain risk",
+        "top_k": 5
+      },
+      "output_preview": "5 chunks from 2 filings (Apple Inc. 10-K 2024, 2023)"
+    },
+    {
+      "tool": "sql_query",
+      "input": {
+        "sql": "select year, mentions from mart_risk_trends where ticker='AAPL' and category='supply_chain'"
+      },
+      "output_preview": "[{\"year\": 2023, \"mentions\": 9}, {\"year\": 2024, \"mentions\": 10}]"
+    }
+  ],
+  "refused": false
+}

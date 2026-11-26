@@ -1,0 +1,159 @@
+<div class="page-head">
+  <div>
+    <h1>Pipeline</h1>
+    <p class="subtitle">Ingest → parse → extract → load. Health of the document pipeline.</p>
+  </div>
+  <button
+    class="btn"
+    type="button"
+    (click)="overview.reload()"
+    [disabled]="overview.isLoading()"
+    data-testid="refresh"
+  >
+    ↻ Refresh
+  </button>
+</div>
+
+<app-state
+  [loading]="overview.isLoading() && !overview.hasValue()"
+  [error]="overview.error()"
+  loadingText="Loading pipeline overview…"
+/>
+
+@if (overview.hasValue()) {
+  @let o = overview.value();
+
+  <section class="stat-grid" data-testid="totals">
+    @for (t of totals(); track t.key) {
+      <div class="stat" [attr.data-testid]="'total-' + t.key">
+        <div class="stat-label">{{ t.label }}</div>
+        <div class="stat-value">{{ t.value | number }}</div>
+      </div>
+    }
+  </section>
+
+  @if (o.queue) {
+    <section class="card" data-testid="queue">
+      <h2>Work queue</h2>
+      <div class="queue">
+        @for (q of o.queue | keyvalue; track q.key) {
+          <span class="queue-item"
+            ><span class="muted">{{ q.key }}</span> <strong>{{ q.value }}</strong></span
+          >
+        }
+      </div>
+    </section>
+  }
+
+  <div class="grid grid-2">
+    <section class="card" data-testid="status-bar">
+      <h2>Filings by status</h2>
+      @if (statusBar().length) {
+        <div class="stack-bar" role="img" aria-label="Filings by status">
+          @for (s of statusBar(); track s.status) {
+            <span
+              [style.width.%]="s.pct"
+              [style.background]="s.color"
+              [title]="s.status + ': ' + s.count"
+            ></span>
+          }
+        </div>
+        <div class="legend">
+          @for (s of statusBar(); track s.status) {
+            <span
+              ><span class="dot" [style.background]="s.color"></span>{{ s.status }}
+              <strong>{{ s.count }}</strong></span
+            >
+          }
+        </div>
+      } @else {
+        <app-state [empty]="true" emptyText="No filings yet." />
+      }
+    </section>
+
+    <section class="card" data-testid="throughput">
+      <h2>Throughput (filings / day)</h2>
+      @if (o.throughput.length) {
+        <app-chart
+          type="line"
+          [labels]="throughputLabels()"
+          [datasets]="throughputData()"
+          [height]="200"
+          ariaLabel="Throughput chart"
+        />
+      } @else {
+        <app-state [empty]="true" emptyText="No throughput data yet." />
+      }
+    </section>
+  </div>
+
+  <section class="card" data-testid="runs">
+    <h2>Recent runs</h2>
+    @if (o.runs.length) {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Run</th>
+              <th>DAG</th>
+              <th>Status</th>
+              <th>Started</th>
+              <th class="num">Duration</th>
+              <th class="num">Docs in</th>
+              <th class="num">OK</th>
+              <th class="num">Quarantined</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of o.runs; track r.run_id) {
+              <tr data-testid="run-row">
+                <td class="mono">{{ r.run_id }}</td>
+                <td>{{ r.dag_id }}</td>
+                <td><app-badge [value]="r.status" /></td>
+                <td>{{ r.started_at | date: 'short' }}</td>
+                <td class="num">{{ formatDuration(r.duration_s) }}</td>
+                <td class="num">{{ r.docs_in }}</td>
+                <td class="num">{{ r.docs_ok }}</td>
+                <td class="num">{{ r.docs_quarantined }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <app-state [empty]="true" emptyText="No pipeline runs recorded yet." />
+    }
+  </section>
+
+  <section class="card" data-testid="quarantine">
+    <h2>Quarantine</h2>
+    @if (o.quarantine.length) {
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Accession</th>
+              <th>Stage</th>
+              <th>Error</th>
+              <th>When</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (q of o.quarantine; track q.id) {
+              <tr data-testid="quarantine-row">
+                <td class="mono">
+                  <a [routerLink]="['/filings', q.accession_no]">{{ q.accession_no }}</a>
+                </td>
+                <td><app-badge [value]="q.stage" /></td>
+                <td class="error-cell">{{ q.error }}</td>
+                <td>{{ q.created_at | date: 'short' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <app-state [empty]="true" emptyText="Quarantine is empty — every document passed. 🎉" />
+    }
+  </section>
+}

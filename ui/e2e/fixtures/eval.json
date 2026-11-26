@@ -1,0 +1,74 @@
+{
+  "confidence_threshold": 0.8,
+  "runs": [
+    {
+      "id": 3,
+      "model": "gpt-4o-mini",
+      "prompt_version": "v2",
+      "n_docs": 50,
+      "created_at": "2026-11-20T10:00:00Z",
+      "metrics": {
+        "schema_valid_rate": 0.98,
+        "quarantine_rate": 0.02,
+        "field_accuracy": {
+          "revenue": 0.96,
+          "net_income": 0.94,
+          "operating_cash_flow": 0.88,
+          "employees": 0.81,
+          "fiscal_year": 1
+        },
+        "risk_precision": 0.87,
+        "risk_recall": 0.79,
+        "latency_p50_ms": 2100,
+        "latency_p95_ms": 5400,
+        "docs_per_hour": 410
+      }
+    },
+    {
+      "id": 2,
+      "model": "gpt-4o-mini",
+      "prompt_version": "v1",
+      "n_docs": 50,
+      "created_at": "2026-11-12T10:00:00Z",
+      "metrics": {
+        "schema_valid_rate": 0.91,
+        "quarantine_rate": 0.09,
+        "field_accuracy": {
+          "revenue": 0.9,
+          "net_income": 0.86,
+          "operating_cash_flow": 0.74,
+          "employees": 0.7,
+          "fiscal_year": 0.98
+        },
+        "risk_precision": 0.8,
+        "risk_recall": 0.71,
+        "latency_p50_ms": 1900,
+        "latency_p95_ms": 5100,
+        "docs_per_hour": 430
+      }
+    },
+    {
+      "id": 1,
+      "model": "llama3.1:8b",
+      "prompt_version": "v1",
+      "n_docs": 50,
+      "created_at": "2026-11-05T10:00:00Z",
+      "metrics": {
+        "schema_valid_rate": 0.84,
+        "quarantine_rate": 0.16,
+        "field_accuracy": {
+          "revenue": 0.82,
+          "net_income": 0.78,
+          "operating_cash_flow": 0.61,
+          "employees": 0.58,
+          "fiscal_year": 0.95
+        },
+        "risk_precision": 0.72,
+        "risk_recall": 0.64,
+        "latency_p50_ms": 4200,
+        "latency_p95_ms": 9800,
+        "docs_per_hour": 190
+      }
+    }
+  ]
+}

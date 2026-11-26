@@ -1,0 +1,63 @@
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+
+  button {
+    border: none;
+    background: none;
+    padding: 6px 14px;
+    font: inherit;
+    font-size: 13px;
+    color: var(--muted);
+    cursor: pointer;
+    text-transform: capitalize;
+
+    & + button {
+      border-left: 1px solid var(--border);
+    }
+
+    &.active {
+      background: rgba(79, 124, 255, 0.12);
+      color: var(--primary-600);
+      font-weight: 600;
+    }
+  }
+}
+
+.small {
+  font-size: 12px;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.value-cell {
+  max-width: 220px;
+  word-break: break-word;
+}
+
+.reason-cell {
+  max-width: 380px;
+}
+
+.snippet {
+  margin: 6px 0 0;
+  padding: 6px 10px;
+  border-left: 3px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+.actions {
+  white-space: nowrap;
+
+  .btn + .btn {
+    margin-left: 4px;
+  }
+}
