@@ -13,7 +13,7 @@ SERVICE ?=
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up up-all down logs demo demo-offline test test-integration lint fmt dbt eval \
+.PHONY: help build up up-all down logs demo demo-offline test test-integration lint fmt dbt eval \
 	e2e ui-dev tf-validate tf-apply-local pull-models
 
 help: ## Show this help
@@ -25,11 +25,18 @@ help: ## Show this help
 	@echo "'make up-all' adds Airflow (:8081, admin/admin) + Grafana (:3000) / Prometheus (:9090)."
 	@echo "Ollama runs natively on the host: 'make pull-models' once."
 
-up: ## Build + start the core stack (postgres, minio, localstack, api, worker, ui)
-	$(COMPOSE) up -d --build
+# migrate/api/worker share the docflow-app:local image. Building it from three services in
+# parallel races on the image tag ("already exists"), so build it once via `api`, then start.
+build: ## Build the app and UI images (app image once, shared by migrate/api/worker)
+	$(COMPOSE) build api
+	$(COMPOSE) build ui
 
-up-all: ## Core + Airflow + observability (OTel collector, Prometheus, Grafana), tracing on
-	OTEL_EXPORTER_OTLP_ENDPOINT=$(OTEL_ENDPOINT) $(COMPOSE) $(PROFILES_ALL) up -d --build
+up: build ## Build + start the core stack (postgres, minio, localstack, api, worker, ui)
+	$(COMPOSE) up -d
+
+up-all: build ## Core + Airflow + observability (OTel collector, Prometheus, Grafana), tracing on
+	$(COMPOSE) --profile airflow build airflow
+	OTEL_EXPORTER_OTLP_ENDPOINT=$(OTEL_ENDPOINT) $(COMPOSE) $(PROFILES_ALL) up -d
 
 down: ## Stop every service (all profiles); volumes are kept
 	$(COMPOSE) $(PROFILES_ALL) down

@@ -72,7 +72,11 @@ services:
     restart: unless-stopped
 
   minio:
-    image: minio/minio:latest
+    # Official minio/minio + minio/mc images are no longer published (Docker Hub/quay, late 2025).
+    # Chainguard's free build ships the same MinIO server plus `mc`; runs as root so the named
+    # volume at /data is writable.
+    image: chainguard/minio:latest
+    user: "0:0"
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
       MINIO_ROOT_USER: docflow
@@ -90,7 +94,8 @@ services:
     restart: unless-stopped
 
   minio-init:
-    image: minio/mc:latest
+    image: chainguard/minio:latest
+    user: "0:0"
     depends_on:
       minio:
         condition: service_healthy
