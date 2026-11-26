@@ -9,7 +9,7 @@ __pycache__/
 htmlcov/
 
 # Data & local state
-data/
+/data/
 .env
 *.duckdb
 *.duckdb.wal
@@ -18,7 +18,7 @@ data/
 warehouse/target/
 warehouse/dbt_packages/
 warehouse/logs/
-logs/
+/logs/
 
 # Terraform
 .terraform/
