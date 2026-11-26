@@ -1,0 +1,134 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONUTF8: "1"
+  SEC_USER_AGENT: "DocFlow CI ci@example.com"
+
+jobs:
+  python:
+    name: lint, types, unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --all-extras
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy .
+      - run: uv run pytest --cov=core --cov=ingestion --cov=processing --cov=api --cov-report=term
+      - name: DAG files compile
+        run: uv run python -m py_compile airflow/dags/*.py
+      - name: dbt parse
+        run: uv run dbt parse --project-dir warehouse --profiles-dir warehouse
+
+  ui:
+    name: angular lint, unit, build, e2e (mocked API)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm test -- --watch=false
+      - run: npm run build
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+        env:
+          E2E_MOCK: "1"
+          E2E_START_SERVER: "1"
+
+  integration-e2e:
+    name: integration + E2E (small mode, offline fixtures)
+    runs-on: ubuntu-latest
+    needs: [python]
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: docflow
+          POSTGRES_PASSWORD: docflow
+          POSTGRES_DB: docflow
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U docflow" --health-interval 5s --health-timeout 5s --health-retries 20
+      localstack:
+        image: localstack/localstack:3
+        env:
+          SERVICES: s3,sqs
+        ports: ["4566:4566"]
+    env:
+      DATABASE_URL: postgresql+psycopg://docflow:docflow@localhost:5432/docflow
+      S3_ENDPOINT_URL: http://localhost:4566
+      S3_ACCESS_KEY: test
+      S3_SECRET_KEY: test
+      SQS_ENDPOINT_URL: http://localhost:4566
+      LLM_PROVIDER: fake
+      EDGAR_FIXTURES_DIR: tests/fixtures/edgar
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --all-extras
+      - name: wait for localstack
+        run: timeout 120 bash -c 'until curl -s localhost:4566/_localstack/health | grep -q "\"sqs\": \"\(available\|running\)\""; do sleep 2; done'
+      - run: uv run docflow init-db
+      - name: integration tests (full pipeline + API + agent)
+        run: uv run pytest -m integration -v
+      - name: small-mode demo data for the UI
+        run: uv run docflow demo
+      - name: start API
+        run: |
+          nohup uv run docflow api --port 8000 > api.log 2>&1 &
+          timeout 60 bash -c 'until curl -sf localhost:8000/api/health; do sleep 1; done'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - name: Playwright E2E against the real backend
+        working-directory: ui
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          E2E_START_SERVER=1 npm run e2e
+      - if: failure()
+        run: cat api.log
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: ui/playwright-report
+          if-no-files-found: ignore
+
+  terraform:
+    name: terraform fmt + validate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform fmt -check -recursive
+      - run: terraform init -backend=false
+      - run: terraform validate
