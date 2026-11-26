@@ -1,0 +1,26 @@
+version: 2
+
+sources:
+  - name: lake
+    description: Parquet exports written by `docflow export` (Postgres state + flattened LLM facts).
+    meta:
+      external_location: "read_parquet('{{ env_var('DOCFLOW_LAKE_DIR', 'data/lake') }}/{name}/*.parquet')"
+    tables:
+      - name: companies
+        columns:
+          - name: cik
+            tests: [unique, not_null]
+      - name: filings
+        columns:
+          - name: accession_no
+            tests: [unique, not_null]
+      - name: sections
+      - name: extractions
+      - name: financial_facts
+      - name: risk_mentions
+      - name: review_tasks
+      - name: ground_truth
+      - name: pipeline_runs
+      - name: quarantine
+      - name: xbrl_facts
+      - name: eval_runs

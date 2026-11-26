@@ -1,0 +1,8 @@
+docflow:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Paths are relative to the working directory (repo root for `docflow dbt` / Airflow).
+      path: "{{ env_var('DOCFLOW_GOLD_DB', 'data/warehouse/gold.duckdb') }}"
+      threads: 4

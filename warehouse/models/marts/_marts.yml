@@ -1,0 +1,63 @@
+version: 2
+
+models:
+  - name: dim_company
+    description: One row per watched company.
+    columns:
+      - name: cik
+        tests: [unique, not_null]
+      - name: name
+        tests: [not_null]
+      - name: sector
+        tests: [not_null]
+
+  - name: dim_sector
+    columns:
+      - name: sector
+        tests: [unique, not_null]
+
+  - name: fct_filings
+    columns:
+      - name: accession_no
+        tests: [unique, not_null]
+      - name: cik
+        tests:
+          - not_null
+          - relationships: {arguments: {to: ref('dim_company'), field: cik}}
+      - name: status
+        tests:
+          - accepted_values: {arguments: {values: [ingested, parsed, extracted, quarantined]}}
+
+  - name: fct_financials
+    description: Revenue, net income and operating cash flow (USD) per company x fiscal year x source.
+    tests:
+      - dbt_utils_unique_combination: {arguments: {columns: [cik, fiscal_year, source]}}
+    columns:
+      - name: source
+        tests:
+          - not_null
+          - accepted_values: {arguments: {values: [llm, xbrl]}}
+      - name: cik
+        tests:
+          - relationships: {arguments: {to: ref('dim_company'), field: cik}}
+
+  - name: fct_risk_mentions
+    columns:
+      - name: category
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [ai_technology, cyber, regulatory, supply_chain, macro, competition, other]
+      - name: mentions
+        tests: [not_null]
+
+  - name: fct_extraction_quality
+    columns:
+      - name: model
+        tests: [not_null]
+
+  - name: rpt_pipeline_health
+    columns:
+      - name: dag_id
+        tests: [unique, not_null]
