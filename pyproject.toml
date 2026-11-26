@@ -1,0 +1,89 @@
+[project]
+name = "docflow"
+version = "0.1.0"
+description = "AI document intelligence on top of a real data-engineering pipeline (SEC EDGAR)."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "MIT" }
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.6",
+  "sqlalchemy>=2.0.36",
+  "alembic>=1.14",
+  "psycopg[binary]>=3.2",
+  "pgvector>=0.3.6",
+  "boto3>=1.35",
+  "httpx>=0.28",
+  "tenacity>=9.0",
+  "selectolax>=0.3.26",
+  "pyarrow>=18.0",
+  "duckdb>=1.1.3",
+  "typer>=0.15",
+  "structlog>=24.4",
+  "opentelemetry-api>=1.29",
+  "opentelemetry-sdk>=1.29",
+  "opentelemetry-exporter-otlp-proto-http>=1.29",
+  "opentelemetry-instrumentation-fastapi>=0.50b0",
+  "prometheus-client>=0.21",
+  "sqlglot>=26.0",
+  "mcp>=2.3",
+  "pypdf>=5.1",
+  "reportlab>=4.2",
+]
+
+[project.optional-dependencies]
+warehouse = ["dbt-core>=1.9", "dbt-duckdb>=1.9"]
+
+[dependency-groups]
+dev = [
+  "ruff>=0.8",
+  "mypy>=1.13",
+  "pytest>=8.3",
+  "pytest-cov>=6.0",
+  "respx>=0.22",
+  "boto3-stubs[s3,sqs]>=1.35",
+  "types-requests",
+]
+
+[project.scripts]
+docflow = "core.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["core", "ingestion", "processing", "api"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["ui", "warehouse/target", "warehouse/dbt_packages", "data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "S", "N"]
+ignore = ["S101", "S608", "B008", "RUF012", "E501", "N818"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S", "N802"]
+"core/migrations/**" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+exclude = ["core/migrations/", "airflow/", "ui/", "tests/"]
+disallow_untyped_decorators = false
+disallow_subclassing_any = false
+warn_return_any = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+  "integration: needs the docker compose stack (make up)",
+  "live: hits the real SEC EDGAR API",
+]
+addopts = "-m 'not integration and not live'"

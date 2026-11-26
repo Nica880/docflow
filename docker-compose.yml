@@ -1,0 +1,270 @@
+# DocFlow local stack.
+#
+#   docker compose up -d --build                         # core: postgres, minio, localstack, migrate, api, worker, ui
+#   docker compose --profile airflow up -d               # + Airflow (standalone) on :8081
+#   docker compose --profile observability up -d         # + OTel collector, Prometheus :9090, Grafana :3000
+#
+# Ollama runs natively on the host (Metal GPU on macOS); containers reach it via host.docker.internal.
+# Connection URLs below are the in-network ones and intentionally NOT read from .env, which holds
+# the host-side (localhost) values used by `uv run docflow ...`.
+
+name: docflow
+
+x-docflow-env: &docflow-env
+  DATABASE_URL: postgresql+psycopg://docflow:docflow@postgres:5432/docflow
+  S3_ENDPOINT_URL: http://minio:9000
+  S3_ACCESS_KEY: docflow
+  S3_SECRET_KEY: docflow-secret
+  BRONZE_BUCKET: docflow-bronze
+  SILVER_BUCKET: docflow-silver
+  SQS_ENDPOINT_URL: http://localstack:4566
+  SQS_QUEUE_NAME: docflow-extract
+  AWS_ACCESS_KEY_ID: test
+  AWS_SECRET_ACCESS_KEY: test
+  LLM_PROVIDER: ${LLM_PROVIDER:-ollama}
+  OLLAMA_BASE_URL: http://host.docker.internal:11434
+  LLM_MODEL: ${LLM_MODEL:-qwen2.5:7b-instruct}
+  LLM_COMPARE_MODEL: ${LLM_COMPARE_MODEL:-llama3.1:8b}
+  EMBED_MODEL: ${EMBED_MODEL:-nomic-embed-text}
+  SEC_USER_AGENT: ${SEC_USER_AGENT:-}
+  # No value -> passed through from the host environment only when set (offline/fixture mode).
+  # An empty string would be parsed as Path("."), so it must stay unset otherwise.
+  EDGAR_FIXTURES_DIR:
+  # Shared `docflow-data` volume: dbt writes gold.duckdb, the API reads it read-only.
+  WAREHOUSE_DIR: /app/data/warehouse
+  LAKE_DIR: /app/data/lake
+  DOCFLOW_LAKE_DIR: /app/data/lake
+  DOCFLOW_GOLD_DB: /app/data/warehouse/gold.duckdb
+  DBT_PROJECT_DIR: /app/warehouse
+  # Empty = tracing disabled. `make up-all` sets http://otel-collector:4318.
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+
+x-docflow-app: &docflow-app
+  build:
+    context: .
+    dockerfile: Dockerfile
+  image: docflow-app:local
+  environment: *docflow-env
+  volumes:
+    - docflow-data:/app/data
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+services:
+  # ---------------------------------------------------------------- infrastructure
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: docflow
+      POSTGRES_PASSWORD: docflow
+      POSTGRES_DB: docflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U docflow -d docflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: docflow
+      MINIO_ROOT_PASSWORD: docflow-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint:
+      - /bin/sh
+      - -c
+      - >-
+        mc alias set local http://minio:9000 docflow docflow-secret &&
+        mc mb --ignore-existing local/docflow-bronze local/docflow-silver &&
+        echo buckets ready
+    restart: "no"
+
+  localstack:
+    image: localstack/localstack:3
+    environment:
+      # sqs is used by the app; s3 only so infra/terraform can be applied here (the app uses MinIO).
+      SERVICES: sqs,s3
+      AWS_DEFAULT_REGION: us-east-1
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstackdata:/var/lib/localstack
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs http://localhost:4566/_localstack/health | grep -q sqs"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------- application
+  migrate:
+    <<: *docflow-app
+    command: ["docflow", "init-db"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      localstack:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    <<: *docflow-app
+    command: ["docflow", "api", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
+  worker:
+    <<: *docflow-app
+    command: ["docflow", "worker", "--serve"]
+    expose:
+      - "9100"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  ui:
+    build:
+      context: ./ui
+    image: docflow-ui:local
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------- orchestration (profile: airflow)
+  airflow:
+    profiles: ["airflow"]
+    build:
+      context: .
+      dockerfile: airflow/Dockerfile
+    image: docflow-airflow:local
+    command: ["standalone"]
+    environment:
+      <<: *docflow-env
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://docflow:docflow@postgres:5432/airflow
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "True"
+      AIRFLOW__WEBSERVER__EXPOSE_CONFIG: "False"
+      # Handled by the official image entrypoint before `standalone` starts (login admin/admin).
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    ports:
+      - "8081:8080"
+    volumes:
+      - docflow-data:/app/data
+      - ./airflow/dags:/opt/airflow/dags
+      - airflow-logs:/opt/airflow/logs
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------- observability (profile: observability)
+  otel-collector:
+    profiles: ["observability"]
+    image: otel/opentelemetry-collector-contrib:0.115.1
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./observability/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4318:4318"
+    restart: unless-stopped
+
+  prometheus:
+    profiles: ["observability"]
+    image: prom/prometheus:v2.55.1
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheusdata:/prometheus
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  grafana:
+    profiles: ["observability"]
+    image: grafana/grafana:11.3.1
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/docflow.json
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/etc/grafana/dashboards:ro
+      - grafanadata:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  miniodata:
+  localstackdata:
+  docflow-data:
+  airflow-logs:
+  prometheusdata:
+  grafanadata:

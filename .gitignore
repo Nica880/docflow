@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Data & local state
+data/
+.env
+*.duckdb
+*.duckdb.wal
+
+# dbt
+warehouse/target/
+warehouse/dbt_packages/
+warehouse/logs/
+logs/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+
+# OS / editors
+.DS_Store
+.idea/
