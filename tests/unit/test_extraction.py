@@ -146,3 +146,15 @@ def test_hashing_embedder_is_deterministic_and_normalised() -> None:
     a, b = emb.embed(["supply chain risk", "supply chain risk"])
     assert a == b
     assert abs(sum(v * v for v in a) - 1.0) < 1e-9
+
+
+def test_json_schema_quotes_before_values() -> None:
+    """Snippets must be decoded before the values they support, and every key is required."""
+    fin = json_schema("FinancialHighlights")
+    keys = list(fin["properties"])
+    for field in ("revenue", "net_income", "operating_cash_flow"):
+        assert keys.index(f"{field}_snippet") == keys.index(field) - 1
+    assert fin["required"] == keys
+    risk = json_schema("RiskFactors")["$defs"]["Risk"]
+    assert next(iter(risk["properties"])) == "snippet"
+    assert risk["required"] == list(risk["properties"])

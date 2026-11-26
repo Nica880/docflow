@@ -92,19 +92,34 @@ responses (8 real 10-Ks) and a deterministic rules-based extractor; this is the 
 
 ## Metrics
 
-Offline baseline, measured on the recorded fixture set: 8 real 10-K filings from AAPL, MSFT, NVDA,
-JPM and GS (2025–2026). The ground truth is the XBRL company facts, matched within 0.5%:
+Measured with `make eval` on the recorded fixture set: 8 real 10-K filings from AAPL, MSFT, NVDA,
+JPM and GS (2025–2026). The ground truth is the XBRL company facts, matched within 0.5%. LLMs run
+locally through Ollama on an Apple M3 Pro (36 GB). Full report: [`docs/eval/2026-11-26.md`](docs/eval/2026-11-26.md).
 
-| Extractor | schema-valid | revenue | net income | op. cash flow | fiscal year |
-|---|---|---|---|---|---|
-| rules-baseline (regex, CI) | 1.00 | 0.88 | 0.88 | 0.50 | 1.00 |
+| Extractor | prompt | schema-valid | revenue | net income | op. cash flow | fiscal year | p50 latency | docs/hour |
+|---|---|---|---|---|---|---|---|---|
+| `qwen2.5:7b-instruct` | v1 | 1.00 | 0.88 | 0.88 | 0.50 | 1.00 | 72 s | 47 |
+| `qwen2.5:7b-instruct` | v2 | 0.94 | 0.88 | 0.88 | 0.50 | 1.00 | 81 s | 36 |
+| `llama3.1:8b` | v1 | 0.81 | 0.75 | 0.75 | 0.50 | 0.88 | 79 s | 30 |
+| `llama3.1:8b` | v2 | 1.00 | 0.88 | 0.88 | 0.63 | 1.00 | 78 s | 44 |
+| rules-baseline (regex, CI) | – | 1.00 | 0.88 | 0.88 | 0.50 | 1.00 | <1 ms | – |
 
-The misses are informative. JPMorgan publishes its financial statements in an exhibit rather than in
-the 10-K body. Goldman Sachs shows cash-flow lines that the regex misreads. Both cases end up in the
-review queue, which is the point of the confidence design ([ADR-0004](docs/adr/0004-confidence-and-review-threshold.md)).
+What the numbers say, with n = 8 filings (small; treat the differences as indicative):
 
-LLM results (`qwen2.5:7b` vs `llama3.1:8b`, both prompt versions, latency and docs/hour on Apple
-Silicon) are produced by `make eval` and written to [`docs/eval/`](docs/eval).
+- **llama3.1:8b + prompt v2 is the best extractor** here: it is the only one above the rules
+  baseline (operating cash flow 0.63). Prompt v2 (explicit units and column rules) fixes llama's
+  schema failures (0.81 → 1.00 valid); qwen2.5 is already robust with v1.
+- **Precision of auto-accepted fields** at the 0.7 threshold: qwen v1 0.86, llama v2 0.89, rules
+  0.95. The regex is precise on clean statements; the LLMs matter on layouts the regex cannot read.
+- **The misses are informative.** JPMorgan publishes its financial statements in an exhibit rather
+  than in the 10-K body, and Goldman Sachs' cash-flow layout confuses every extractor. Both cases
+  land in the review queue, which is the point of the confidence design
+  ([ADR-0004](docs/adr/0004-confidence-and-review-threshold.md)).
+- **Schema design mattered more than the model.** In the first run both LLMs scored 0.00 on every
+  money field: the JSON schema listed `revenue` before `revenue_snippet`, so under constrained
+  decoding the models wrote `null` first and only then quoted the correct figure. Ordering each
+  quote before its value and requiring every key (extraction schema v2) took both models from 0.00
+  to the numbers above.
 
 ## Design decisions
 

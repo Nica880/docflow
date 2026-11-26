@@ -132,9 +132,40 @@ SCHEMAS: dict[str, type[_Strict]] = {
     "Leadership": Leadership,
     "Invoice": Invoice,
 }
-SCHEMA_VERSION = "1"
+# v2: decoding schema is "quote first" (see json_schema); Pydantic validation is unchanged.
+SCHEMA_VERSION = "2"
 FILING_SCHEMAS = ("FinancialHighlights", "RiskFactors")
 
 
+def _quote_first(obj: dict[str, Any]) -> dict[str, Any]:
+    """Reorder an object schema so each snippet precedes the value it supports, and require all keys.
+
+    Ollama decodes keys in schema order. With `revenue` before `revenue_snippet` and every value
+    optional, 7-8B models on long 10-K contexts emit `"revenue": null` and only then quote the
+    correct figure in the snippet (eval 2026-11-26: 0% accuracy on money fields for both qwen2.5
+    and llama3.1). Quoting first, then copying the number, fixes it. Nullable fields stay
+    nullable, so "not stated" is still expressible as an explicit null.
+    """
+    props: dict[str, Any] = obj.get("properties", {})
+    if not props:
+        return obj
+    order: list[str] = []
+    if "snippet" in props:
+        order.append("snippet")
+    for key in props:
+        if key in order:
+            continue
+        snippet = f"{key}_snippet"
+        if snippet in props and snippet not in order:
+            order.append(snippet)
+        if key not in order:
+            order.append(key)
+    return {**obj, "properties": {k: props[k] for k in order}, "required": order}
+
+
 def json_schema(name: str) -> dict[str, Any]:
-    return SCHEMAS[name].model_json_schema()
+    """JSON Schema sent to the LLM as the constrained-decoding `format` (quote-first order)."""
+    schema = _quote_first(SCHEMAS[name].model_json_schema())
+    if "$defs" in schema:
+        schema["$defs"] = {k: _quote_first(v) for k, v in schema["$defs"].items()}
+    return schema

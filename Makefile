@@ -69,8 +69,8 @@ fmt: ## Auto-format and auto-fix
 dbt: ## Export the Parquet lake and run `dbt build` into gold (in the api container)
 	$(COMPOSE) run --rm api sh -c "docflow export && docflow dbt --command build"
 
-eval: ## Run the eval harness (both models + rules baseline) on the ground-truth set
-	$(COMPOSE) run --rm api docflow eval
+eval: ## Run the eval harness (both models x both prompts + rules baseline) -> docs/eval/<date>.md
+	$(COMPOSE) run --rm -v ./docs/eval:/app/docs/eval api docflow eval -p v1 -p v2
 
 e2e: ## Playwright end-to-end tests
 	cd ui && npm run e2e
