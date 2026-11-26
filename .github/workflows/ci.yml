@@ -121,6 +121,18 @@ jobs:
           path: ui/playwright-report
           if-no-files-found: ignore
 
+  docker:
+    name: docker images build + compose config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose --profile airflow --profile observability config --quiet
+      - run: docker build -t docflow-app .
+      - run: docker build -t docflow-ui ui
+      - run: docker build -t docflow-airflow -f airflow/Dockerfile .
+      - name: app image runs the CLI
+        run: docker run --rm docflow-app docflow --help
+
   terraform:
     name: terraform fmt + validate
     runs-on: ubuntu-latest
